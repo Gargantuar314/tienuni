@@ -1,0 +1,533 @@
+%Either have the `.sty` file in the same directory as the `tex.` file or expose it globally in `$TEXMFHOME` variable, i.e. `~/texmf/tex/latex/tienuni/`
+%Windows with MiKTeX: For security reasons, you cannot edit the MiKTeX installation folder and there is no `$TEXMFHOME`. Create a `localtexmf/` directory somewhere and let MiKTeX know about it, e.g. `~/localtexmf/`. Do not forget to index the packages again in MiKTeX!
+\NeedsTeXFormat{LaTeX2e}
+\ProvidesPackage{tienuni}
+
+%Replace the option string by the raw option string (requires a newish latex)
+\expandafter\let\csname opt@tienuni.sty\expandafter\endcsname
+\csname @raw@opt@tienuni.sty\endcsname
+
+%Language (must occur before meta data)
+\RequirePackage[T1]{fontenc}
+\RequirePackage[ngerman]{babel}
+\babelprovide[hyphenrules=ngerman-x-latest]{ngerman}
+
+%Package options
+\RequirePackage{kvoptions}
+%Possible modes, are subject to change
+\DeclareBoolOption{lecture} %Mode `lecture`: uses course, code, lecturer, author, term, date
+\DeclareBoolOption{assignment} %Mode `assignment`: uses course, code, lecturer, author, authora, authorb, term, number, date
+\DeclareBoolOption{tutorial} %Mode `tutorial`: uses course, code, lecturer, tutor, author, term, number, date
+\DeclareBoolOption{standalone} %Mode `standalone` uses nothing
+%Possible meta data
+\DeclareStringOption{course}
+\DeclareStringOption{code}
+\DeclareStringOption{lecturer}
+\DeclareStringOption{tutor}
+\DeclareStringOption[Tien Nguyen Thanh]{author}
+\DeclareStringOption{authora}
+\DeclareStringOption{authorb}
+\DeclareStringOption{term}
+\DeclareStringOption{number}
+\DeclareStringOption[\today]{date}
+%Other options
+\DeclareStringOption{lstlang}[python]
+%Disable package portions for faster compilation
+\DeclareBoolOption{nomath}
+\DeclareBoolOption{notheorem}
+\DeclareBoolOption{nolisting}
+\DeclareBoolOption{noalgorithm}
+\DeclareBoolOption{notikz}
+\DeclareBoolOption{nodisclaimer} %Only available with `lecture` mode
+\DeclareBoolOption{noproblem} %Disable `problem` statements, only available with `assignment`
+\DeclareBoolOption{trimmed}
+\ProcessKeyvalOptions*
+
+%Other packages are also preloaded, since they will colide with `hyperref`
+%Font
+\RequirePackage{lmodern}
+\RequirePackage{microtype}
+%General Settings
+\RequirePackage[heightrounded, scale=0.8]{geometry}
+\RequirePackage[defaultlines=2, all]{nowidow}
+\RequirePackage{fancyhdr}
+%Mathematical typesetting
+\iftienuni@nomath\else
+    \RequirePackage{mathtools}
+    \RequirePackage{mleftright} %Reduce akward space around `\left`/`\right`
+    \RequirePackage{nicematrix}
+    \RequirePackage{aligned-overset}
+    \RequirePackage{amssymb}
+    \RequirePackage{diffcoeff}
+    \RequirePackage[locale=DE]{siunitx}
+    \RequirePackage{bm}
+    \RequirePackage{ziffer}
+\fi
+%Theorem environments
+\iftienuni@notheorem\else
+    %\RequirePackage[thmarks, framed, hyperref, amsmath]{ntheorem}
+    \RequirePackage{amsthm}
+\fi
+%Listings and pseudocode
+\iftienuni@nolisting\else
+    \RequirePackage{listings}
+    \RequirePackage{lstautogobble} %Provides `autogobble`
+\fi
+%Drawings, figures and tables
+\iftienuni@notikz
+    \RequirePackage{xcolor}
+\else
+    \RequirePackage{tikz}
+        \usetikzlibrary{babel, positioning, calc, arrows.meta, math, fit}
+    \RequirePackage{pgfplots}
+        \pgfplotsset{compat=1.18}
+\fi
+\RequirePackage{booktabs}
+\RequirePackage[justification=centering, singlelinecheck=false]{caption}
+%Trimmed
+\iftienuni@trimmed
+    \RequirePackage{xcomment}
+    \RequirePackage{docmute}
+\fi
+%Misc
+\RequirePackage[shortlabels, inline]{enumitem}
+\RequirePackage{multicol}
+\iftienuni@assignment\iftienuni@noproblem
+    \RequirePackage{comment}
+\fi\fi
+\RequirePackage[debrief, immediate]{silence}
+%References
+\RequirePackage{hyperref}
+\RequirePackage[compress, ngerman]{cleveref}
+
+%General settings
+\pagestyle{fancy}
+%\setlength{\headwidth}{\textwidth}
+\fancyfoot[C]{\thepage}
+\iftienuni@lecture
+    \fancyhead[L]{\rightmark}
+    \fancyhead[R]{\tienuni@course}
+\fi
+\iftienuni@assignment
+    \ifx\tienuni@authora\@empty
+        \fancyhead[L]{\tienuni@author}
+    \else\ifx\tienuni@authorb\@empty
+        \fancyhead[L]{\tienuni@author, \tienuni@authora}
+    \else
+        \fancyhead[L]{\tienuni@author, \tienuni@authora, \tienuni@authorb}
+    \fi\fi
+    \fancyhead[R]{\tienuni@course, Blatt~\tienuni@number}
+\fi
+\iftienuni@tutorial
+    \fancyhead[L]{Tutorium~\tienuni@number}
+    \fancyhead[R]{\tienuni@course}
+\fi
+
+%Mathematical typesetting
+\iftienuni@nomath\else
+\counterwithin{equation}{section} %Equation counts with `<sec no>.<eq no>` and restarts at each new section
+\renewcommand*{\left}{\mleft}
+\renewcommand*{\right}{\mright}
+\newcommand*{\mmid}{\;\middle|\;}
+\diffdef{}{
+    op-symbol=\mathrm{d},
+    op-order-sep=0mu %No space between operand and superscript
+}
+%Allowing to add rules and lines similar to tabular in any matrix environment
+%From https://texblog.net/latex-archive/maths/amsmath-matrix/
+\renewcommand*{\env@matrix}[1][*\c@MaxMatrixCols c]{%
+    \hskip -\arraycolsep
+    \let\@ifnextchar\new@ifnextchar
+    \array{#1}%
+}
+\fi
+
+%Custom math notation
+\iftienuni@nomath\else
+%Delimiters
+\DeclarePairedDelimiter{\abs}{\lvert}{\rvert}
+\DeclarePairedDelimiter{\norm}{\lVert}{\rVert}
+\DeclarePairedDelimiter{\mset}{\lbrace}{\rbrace}
+\DeclarePairedDelimiter{\floor}{\lfloor}{\rfloor}
+\DeclarePairedDelimiter{\ceil}{\lceil}{\rceil}
+\DeclarePairedDelimiter{\paren}{\lparen}{\rparen}
+\DeclarePairedDelimiter{\mbrack}{\lbrack}{\rbrack}
+\DeclarePairedDelimiter{\dotp}{\langle}{\rangle}
+\newcommand{\opnorm}{\@ifstar\@opnorms\@opnorm}
+\newcommand{\@opnorms}[1]{%
+    \left|\mkern-1.5mu\left|\mkern-1.5mu\left|
+    #1
+    \right|\mkern-1.5mu\right|\mkern-1.5mu\right|
+}
+\newcommand{\@opnorm}[2][]{%
+    \mathopen{#1|\mkern-1.5mu#1|\mkern-1.5mu#1|}
+    #2
+    \mathclose{#1|\mkern-1.5mu#1|\mkern-1.5mu#1|}
+}
+%General
+\DeclareMathOperator*{\argmin}{arg\,min}
+\DeclareMathOperator*{\argmax}{arg\,max}
+\DeclareMathOperator{\ggt}{ggT}
+\renewcommand*{\gcd}{\ggt}
+\DeclareMathOperator{\lcm}{kgV}
+\DeclareMathOperator{\sgn}{sgn}
+%Complex numbers
+\DeclareMathOperator{\real}{Re}
+\renewcommand*{\Re}{\real}
+\DeclareMathOperator{\imag}{Im}
+\renewcommand*{\Im}{\imag}
+\newcommand{\conj}[1]{\overline{#1}}
+%Logic, sets & numbers
+\newcommand*{\coloniff}{\mathrel{\vcentcolon\!\!\iff}}
+\newcommand*{\powerset}{\mathcal{P}}
+\newcommand*{\dotcup}{\mathop{\dot{\cup}}}
+\newcommand*{\dotbigcup}{\mathop{\dot{\bigcup}}}
+\newcommand*{\N}{\mathbb{N}}
+\newcommand*{\Z}{\mathbb{Z}}
+\newcommand*{\Q}{\mathbb{Q}}
+\newcommand*{\R}{\mathbb{R}}
+\newcommand*{\K}{\mathbb{K}}
+\newcommand*{\C}{\mathbb{C}}
+\newcommand*{\h}{\mathbb{H}}
+\newcommand*{\s}{\mathbb{S}}
+\newcommand*{\e}{\mathrm{e}}
+\newcommand*{\ii}{\mathrm{i}}
+%Analysis
+\newcommand*{\exR}{\overline{\R}}
+\newcommand*{\eps}{\varepsilon}
+\DeclareMathOperator{\diam}{diam}
+\DeclareMathOperator{\dist}{dist}
+\DeclareMathOperator{\arsinh}{Ar\,sinh}
+\DeclareMathOperator{\arcosh}{Ar\,cosh}
+\DeclareMathOperator{\artanh}{Ar\,tanh}
+\newcommand*{\Cf}{\mathcal{C}}
+%Algebra
+\newcommand*{\F}{\mathbb{F}}
+\DeclareMathOperator{\map}{Abb}
+\DeclareMathOperator{\ord}{ord}
+\newcommand*{\id}{\mathrm{id}}
+\DeclareMathOperator{\mchar}{char}
+\DeclareMathOperator{\ghom}{Hom}
+\renewcommand*{\hom}{\ghom}
+\DeclareMathOperator{\mend}{End}
+\DeclareMathOperator{\gker}{Kern}
+\renewcommand*{\ker}{\gker}
+\DeclareMathOperator{\im}{Bild}
+\DeclareMathOperator{\lin}{Lin}
+\DeclareMathOperator{\rk}{Rang}
+\DeclareMathOperator{\rowrk}{Zeilenrang}
+\DeclareMathOperator{\colrk}{Spaltenrang}
+\DeclareMathOperator{\tr}{Spur}
+\DeclareMathOperator{\GL}{GL}
+\DeclareMathOperator{\Iso}{Iso}
+\DeclareMathOperator{\Orth}{O}
+\DeclareMathOperator{\SO}{SO}
+\DeclareMathOperator{\Uni}{U}
+\newcommand*{\mangle}{\mathrm{Winkel}}
+%Misc
+\newcommand*{\bigo}{\mathcal{O}}
+\newcommand*{\rd}{\mathrm{rd}}
+\fi
+
+%Theorem environments
+\iftienuni@notheorem\else
+%Counters for `theorem`, `lemma`, `corollary`, `definition` and `example`: Instead of sharing their counter with `equation` (i.e. the theorem environments don't have counters), retain their counters, but redifine them to the `equation` counter. Reason being so that package `cleveref` can determine the type of environment.
+    \newtheorem{theorem}[equation]{Satz}
+    \newtheorem{proposition}[equation]{Proposition}
+    \newtheorem{lemma}[equation]{Lemma}
+    \newtheorem{corollary}[equation]{Korollar}
+\theoremstyle{definition}
+    \newtheorem{definition}[equation]{Definition}
+    \newtheorem{notation}[equation]{Bezeichnung}
+    \newtheorem{axiom}[equation]{Axiom}
+\theoremstyle{remark}
+    \newtheorem{example}[equation]{Beispiel}
+    \newtheorem{remark}[equation]{Bemerkung}
+    \newtheorem{case}{Fall}
+    \counterwithin*{case}{equation}
+\iftienuni@lecture
+\theoremstyle{definition}
+    \newtheorem{problem}[equation]{Aufgabe}
+    %\renewcommand{\theproblem}{\thesection.\Alph{problem}}
+\theoremstyle{remark}
+    \newtheorem*{solution}{Lösung}
+\iffalse
+%Collect `solution` environments to print at the end of the document. See https://tex.stackexchange.com/questions/623244/problems-and-solutions-with-deferred-printing.
+\newtheorem*{solutionx}{Lösung \thesolutionnumber}
+\ExplSyntaxOn
+\tl_new:N \g_tienuni_solution_tl
+\NewDocumentEnvironment{solution}{+b}{
+    \tl_gput_right:Nx \g_tienuni_solution_tl{
+        \printsolution{\theproblem}{\exp_not:n {#1}}
+    }
+}{}
+\NewDocumentCommand{\printsolutions}{}{
+    \section{Lösungen~zu~den~Aufgaben}
+    \tl_use:N \g_tienuni_solution_tl
+    \tl_gclear:N \g_tienuni_solution_tl
+}
+\NewDocumentCommand{\printsolution}{m +m}{
+    \cs_set:Npn \thesolutionnumber{#1}
+    \begin{solutionx}#2\end{solutionx}
+}
+\ExplSyntaxOff
+\fi
+%Extra environments for `assignment` mode
+\fi
+\iftienuni@assignment
+    \theoremstyle{definition}
+        \newtheorem{problem}{Aufgabe}
+        \newtheorem{solution}{Lösung}
+    %Redefine `section` counter to `problem` so that the theorem-like environments above seem to belong to `problem`. Same goes for `solution` counter (there might be a problem without solution).
+    \renewcommand*{\c@section}{\c@solution}
+\fi
+\iftienuni@tutorial %A copy of `iftienuni@assignment`, since there is no `or` command
+    \theoremstyle{definition}
+        \newtheorem{problem}{Aufgabe}
+        \newtheorem{solution}{Lösung}
+    %Redefine `section` counter to `problem` so that the theorem-like environments above seem to belong to `problem`. Same goes for `solution` counter (there might be a problem without solution).
+    \renewcommand*{\c@section}{\c@solution}
+\fi
+\iftienuni@standalone %A copy of `iftienuni@assignment`, since there is no `or` command
+    \theoremstyle{definition}
+        \newtheorem{problem}{Aufgabe}
+        \newtheorem{solution}{Lösung}
+    %Redefine `section` counter to `problem` so that the theorem-like environments above seem to belong to `problem`. Same goes for `solution` counter (there might be a problem without solution).
+    \renewcommand*{\c@section}{\c@solution}
+\fi\fi
+
+%Listings and pseudocode
+%Note: use `\verb` in math mode since it is more robust (no error ttfamily in math mode)
+\iftienuni@nolisting\else
+\lstloadlanguages{bash, [11]c++, python}
+\lstset{
+    breaklines,
+    floatplacement=htbp,
+    language=\tienuni@lstlang,
+    defaultdialect=[11]c++,
+    basicstyle=\ttfamily,
+    numbers=left,
+    numberstyle=\tiny\color{gray},
+    numbersep=5pt,
+    captionpos=b,
+    xleftmargin=15pt,
+    breakatwhitespace,
+    frame=single,
+    autogobble
+}
+\newcommand*{\lstinputshort}[2][]{%
+    \lstinputlisting[float,caption=\lstinline|#2|],#1]{#2}%
+}
+\fi
+\iftienuni@noalgorithm\else
+\RequirePackage{algorithm}
+\RequirePackage[noend]{algpseudocode}
+    \floatname{algorithm}{Algorithmus}
+    \algrenewcommand{\algorithmicrequire}{\makebox[0pt][l]{\textbf{input:}}\phantom{\textbf{output:}}}
+    \algrenewcommand{\algorithmicensure}{\textbf{output:}}
+    \algnewcommand{\algorithmicset}{\textbf{set}}
+    \algnewcommand{\Set}{\algorithmicset\space}
+    \algnewcommand{\algorithmicgoto}{\textbf{goto}}
+    %`\algnewcommand{\Goto}{\item[\algorithmicgoto]}` as an example for `\Require` style commands
+    \algnewcommand{\Goto}{\algorithmicgoto\space}
+    \algnewcommand{\algorithmicstop}{\textbf{stop}}
+    \algnewcommand{\Stop}{\algorithmicstop\space}
+%New breakable environment for algorithm: By default, algorithm is a float and thus no page break is possible. The following mimics the design of the algorithm environment without using floats. See: https://tex.stackexchange.com/questions/33866/algorithm-tag-and-page-break
+\renewenvironment{algorithm}{%
+    \begin{center}
+        \refstepcounter{algorithm}%
+        \hrule height.8pt depth0pt \kern2pt% \@fs@pre for \@fs@ruled from float package
+        \renewcommand{\caption}[2][\relax]{% Make new \caption
+            {\raggedright\textbf{\fname@algorithm~\thealgorithm} ##2\par}%
+            %The following adds the environment to list of algorithms (loa) in the toc
+            %\ifx\relax##1\relax
+            %    \addcontentsline{loa}{algorithm}{\protect\numberline{\thealgorithm}##2}%
+            %\else
+            %    \addcontentsline{loa}{algorithm}{\protect\numberline{\thealgorithm}##1}%
+            %\fi
+            \kern2pt\hrule\kern2pt%
+        }%
+}{%
+        \kern2pt\hrule\relax% \@fs@post for \@fs@ruled
+    \end{center}
+}
+\fi
+
+%Drawings, figures and tables
+\newcommand*{\colsep}{\hskip 3\tabcolsep} %Custom length for separating columns a bit more; `\tabcolsep` stores only half of the actually column separation, since it is added on the left and right columns
+
+%Trimmed
+\iftienuni@trimmed
+    \xcomment{definition,notation,theorem,lemma,proposition,corollary}
+\fi
+
+%Float settings
+\g@addto@macro{\@floatboxreset}{\centering} %Add `\centering`
+%Add `htbp`, `lstlisting` is defined in its section respectively
+\renewcommand*{\fps@figure}{htbp}
+\renewcommand*{\fps@table}{htbp}
+%Redefine counters
+\renewcommand*{\c@table}{\c@figure}
+\renewcommand*{\thetable}{\thefigure}
+\renewcommand*{\ftype@figure}{\ftype@table}
+\counterwithin{figure}{section}
+\counterwithin{table}{section}
+%The displayed `section` counter is replaced with the `solution` counter, but with every `solution` call, the `section` mechanism is not triggered, meaning the figure numbers do not reset
+\iftienuni@assignment
+    \@addtoreset{figure}{solution}
+\fi
+
+%Optional `nolisting`
+%`lstlisting` needs special treatement, since its counter is defined at `\AtBeginDocument`
+\iftienuni@nolisting\else
+    \AtBeginDocument{
+        \renewcommand*{\c@lstlisting}{\c@figure}
+        \renewcommand*{\thelstlisting}{\thefigure}
+        \renewcommand*{\ftype@figure}{\ftype@lstlisting}
+        \counterwithin{lstlisting}{section}
+    }
+\fi
+%Optional `noalgorithm`
+\iftienuni@noalgorithm\else
+    \renewcommand*{\fps@algorithm}{htbp}
+    \renewcommand*{\c@algorithm}{\c@figure}
+    \renewcommand*{\thealgorithm}{\thefigure}
+    \renewcommand*{\ftype@figure}{\ftype@algorithm}
+    \counterwithin{algorithm}{section}
+\fi
+
+%References
+\hypersetup{
+    bookmarksnumbered,
+    hidelinks,
+    pdfauthor={\tienuni@author},
+    pdftitle={\tienuni@code~\tienuni@course}
+}
+%Abuse capitalised commands for german genitive case
+\crefname{theorem}{Satz}{Sätze}
+\crefname{proposition}{Proposition}{Propositionen}
+\crefname{lemma}{Lemma}{Lemmata}
+\crefname{corollary}{Korollar}{Korollare}
+\crefname{axiom}{Axiom}{Axiome}
+\crefname{definition}{Definition}{Definitionen}
+\crefname{notation}{Bezeichnung}{Bezeichnungen}
+\crefname{problem}{Aufgabe}{Aufgaben}
+\crefname{solution}{Lösung}{Lösungen}
+\crefname{remark}{Bemerkung}{Bemerkungen}
+\crefname{example}{Beispiel}{Beispiele}
+\crefname{case}{Fall}{Fälle}
+\crefname{equation}{}{}
+\crefname{figure}{Abb.}{Abb.}
+\crefname{table}{Tab.}{Tab.}
+\crefname{listing}{Lst.}{Lst.}
+\crefname{algorithm}{Algorithmus}{Algorithmen}
+\crefname{section}{Kap.}{Kap.}
+\crefname{subsection}{Abschn.}{Abschn.}
+\crefname{subsubsection}{Unterabschn.}{Unterabschn.}
+\Crefname{theorem}{Satzes}{}
+\Crefname{lemma}{Lemmas}{}
+
+%Title
+\iftienuni@lecture
+    \title{\vspace*{-2\baselineskip}
+        \tienuni@code{} -- \tienuni@course
+    }
+    \author{
+        Dozent:\\\tienuni@lecturer
+        \and
+        Mitschriften von:\\\tienuni@author
+    }
+    \date{
+        \tienuni@term\\
+        {\small Stand: \tienuni@date}
+    }
+\fi
+\iftienuni@assignment
+    \title{\vspace*{-2\baselineskip}
+        {\normalsize\tienuni@code{}~-- \tienuni@course{}~-- \tienuni@lecturer{}~-- \tienuni@term}\\
+        Blatt~\tienuni@number
+    }
+    \ifx\tienuni@authora\@empty
+        \author{\tienuni@author}
+    \else\ifx\tienuni@authorb\@empty
+        \author{\tienuni@author \and \tienuni@authora}
+    \else
+        \author{\tienuni@author \and \tienuni@authora \and \tienuni@authorb}
+    \fi\fi
+    \date{\tienuni@date}
+\fi
+\iftienuni@tutorial
+    \title{\vspace*{-2\baselineskip}
+        {\normalsize\tienuni@code{}~-- \tienuni@course{}~-- \tienuni@lecturer{}~-- \tienuni@term}\\
+        Tutorium~\tienuni@number
+    }
+    \author{
+        Tutor:\\\tienuni@tutor
+        \and
+        Mitschriften von:\\\tienuni@author
+    }
+    \date{\tienuni@date}
+\fi
+
+%Disclaimer for `lecture` mode
+\iftienuni@lecture\iftienuni@nodisclaimer\else
+    \g@addto@macro{\maketitle}{%
+        \begin{minipage}[c]{0.9\textwidth}\footnotesize%
+            Das sind meine persönlichen Mitschriften aus der Vorlesung und hängen in keiner Weise mit dem Dozenten als Person oder der Universität zusammen. Die Mitschriften basieren zwar auf der Vorlesung des Dozenten, wurden aber mehrfach von mir und mithilfe anderer Quellen (Personen, Bücher, Internet, Übungen) überarbeitet, sodass sie nur in ferner bis keiner Weise die Vorlesung widerspiegeln. Trotz großer Sorgfalt bei der Erstellung der Mitschriften sind alle Angaben ohne Gewähr und Anspruch auf Vollständigkeit.
+        \end{minipage}\bigskip
+    }
+\fi\fi
+
+%Lecture separator for `lecture` mode
+\iftienuni@lecture
+    \newcounter{c@lecturesep}
+    \def\@hrulefill{\leavevmode\leaders\hrule height 0.65ex depth \dimexpr0.4pt-0.65ex\hfill\kern\z@} %Alias to `\hrulefill`, but raised by `height`
+    \newcommand*{\lecturesep}[1]{%
+        \stepcounter{c@lecturesep}%
+        \vspace{\baselineskip}\noindent\@hrulefill%
+        \fbox{Ende der Vorlesung~\thec@lecturesep{} am {#1}}%
+        \@hrulefill\vspace{\baselineskip}%
+    }
+    \iffalse
+    \newcommand*{\lecturesep}[1]{%
+        \stepcounter{c@lecturesep}%
+        \vspace{\baselineskip}\noindent\tikz{\draw[<->] (0,0) -- (\textwidth,0) node [midway, draw, fill=white] {Ende der Vorlesung \thec@lecturesep{} am {#1}};}\vspace{\baselineskip}
+    }
+    \fi
+\fi
+
+%Misc
+\iftienuni@notikz\else
+    \tikzset{
+        >=Stealth,
+        dot/.pic={\filldraw circle[radius=1.5pt];},
+        pics/xtick/.style args={#1}{
+            code={\draw (0,-0.1) node[below] {#1} -- (0,0.1);}
+        },
+        pics/ytick/.style args={#1}{
+            code={\draw (-0.1,0) node[left] {#1} -- (0.1,0);}
+        },
+        pics/xtickr/.style args={#1}{
+            code={\draw (0,-0.1) -- (0,0.1) node[above] {#1};}
+        },
+        pics/ytickr/.style args={#1}{
+            code={\draw (-0.1,0) -- (0.1,0) node[right] {#1};}
+        }
+    }
+\fi
+\iftienuni@assignment\iftienuni@noproblem
+    \excludecomment{problem}
+\fi\fi
+%Set section on new page
+\iftienuni@lecture
+    %\let\@temp@section\section %Temporary variable to save original definition
+    %\renewcommand*{\section}{\clearpage\@temp@section}
+    \@addtoreset{footnote}{section}
+    \renewcommand*{\l@subsection}{\@dottedtocline{2}{1.5em}{2.7em}}
+    \renewcommand*{\l@subsubsection}{\@dottedtocline{3}{3.8em}{3.6em}}
+\fi
+\newcommand*{\refitem}[1][]{\item[#1]\protected@edef\@currentlabel{\textnormal{#1}}}
+\WarningFilter{latex}{Font shape `T1/lmr/m/scit' undefined}
+%\renewcommand*{\underline}
+
+\endinput
