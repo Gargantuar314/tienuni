@@ -10,28 +10,28 @@ I will lay out how I install my style file with MikTeX on Windows 10. For more d
 + <https://miktex.org/faq/local-additions>,
 + <https://miktex.org/kb/texmf-roots>.
 
-1. Create a new directory which MikTeX should manage. This can be anything and practically anywhere. I use
+1. **Create a new directory which MikTeX should manage.** This can be anything and practically anywhere. I use the more conventional approach
    ```powershell
-   C:\Users\{yourusername}\AppData\Local\localtexmf
+   C:\Users\{yourusername}\localtexmf
    ```
    where `localtexmf` is the name I use (anything is okay). To adhere to the [*TeX Directory Structure*](https://miktex.org/kb/tds), create the directory
    ```powershell
    .\tex\latex
    ```
    
-   To do this all in one swoop and also change directory, do in Powershell
+   To do this all in one swoop, do in Powershell
    ```powershell
-   $texmf = "$env:LOCALAPPDATA\localtexmf\tex\latex"
+   $texmf = "$env:HOMEPATH\localtexmf\tex\latex"
    mkdir $texmf
    ```
-2. Add this directory to the "TEXMF root directories".
+2. **Add this directory to the "TEXMF root directories".**
 
    Start MikTeX as an administrator. Go to
    ```
    Settings > Directories
    ```
    and go on the "plus" symbol to select the newly created directory.
-3. Copy `tienuni.sty` to the current working directory.
+3. **Copy `tienuni.sty` to the current working directory.**
 
    Probably the easiest way would be to download the file and move it to `.\tienuni\` or equivalently `$texmf\tienuni\`.
 
@@ -39,4 +39,4 @@ I will lay out how I install my style file with MikTeX on Windows 10. For more d
    ```powershell
    git clone https:\\github.com\Gargantuar314\tienuni.git $texmf
    ```
-4. In any of your LaTeX files, include `\usepackage{tienuni}` with the various (undocumented) options. Sadly, some of the are required 😬 (*Eek!*).
+4. In any of your LaTeX files, include `\usepackage{tienuni}` with the various (undocumented) options. Sadly, some of them are even required 😬 (*Eek!*).
